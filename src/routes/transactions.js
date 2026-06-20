@@ -116,7 +116,6 @@ router.post('/webhook', async (req, res) => {
       if (artwork) {
         artwork.isSold = true;
         artwork.buyer = buyerId;
-        artwork.isPublished = false;
         await artwork.save();
       }
 
