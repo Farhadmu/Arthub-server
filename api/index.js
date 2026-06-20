@@ -37,6 +37,11 @@ app.use(cors({
   origin: process.env.CLIENT_URL || '*',
   credentials: true
 }));
+
+// IMPORTANT: Stripe webhook needs the RAW request body to verify the signature.
+// It must be registered BEFORE express.json() so the body isn't parsed as JSON first.
+app.use('/api/transactions/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
