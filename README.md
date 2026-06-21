@@ -1,246 +1,195 @@
-# ArtHub - Online Art Marketplace
+<div align="center">
 
-## Overview
-ArtHub is a full-stack web application that connects art lovers, collectors, and buyers with talented artists. The platform allows users to browse, discover, and purchase original artworks. Artists can upload and manage their creations, while an admin oversees the entire system.
+# 🎨 ArtHub — Online Art Marketplace (Backend API)
 
-## Live Demo
-- **Live Site**: [Your Vercel URL]
-- **Server**: [Your Server URL]
+**REST API powering the ArtHub art marketplace**
 
-## Features
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?logo=node.js)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb)](https://www.mongodb.com/)
+[![Stripe](https://img.shields.io/badge/Payments-Stripe-635BFF?logo=stripe)](https://stripe.com/)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)](https://vercel.com/)
 
-### For Buyers (Users)
-- Browse and search artworks with advanced filters
-- Purchase original artworks via Stripe
-- Comment on purchased artworks
-- Track purchase history
-- Subscription tiers (Free, Pro, Premium)
-- Wishlist functionality
+[Live API](https://arthub-server-two.vercel.app) · [Frontend Repo](https://github.com/Farhadmu/Arthub-client) · [Live Site](https://arthub-client-olive.vercel.app)
 
-### For Artists
-- Upload and manage artworks
-- Edit and delete own creations
-- View sales history and analytics
-- Track revenue from artwork sales
+</div>
 
-### For Admins
-- Manage all users and roles
-- Oversee all artworks
-- View all transactions
-- Analytics dashboard with charts
-- Revenue tracking
+---
 
-### Technical Features
-- JWT authentication with email/password and Google OAuth
-- Role-based access control (User, Artist, Admin)
-- Stripe payment integration
-- Image upload via imgBB API
-- Dark mode toggle
-- Responsive design for all devices
-- Advanced search and filtering
-- Pagination
-- Real-time comments system
-- Skeleton loaders and animations
+## 📖 About The Project
 
-## Tech Stack
+This is the backend REST API for **ArtHub**, an online art marketplace connecting artists and art buyers. Built with Node.js, Express, and MongoDB, it handles authentication, role-based access control, artwork management, Stripe payments, comments, wishlists, and admin analytics for the [ArtHub frontend](https://github.com/Farhadmu/Arthub-client).
 
-### Frontend
-- **Next.js 14** - React framework
-- **Tailwind CSS** - Styling
-- **Framer Motion** - Animations
-- **Swiper** - Image carousel
-- **React Hot Toast** - Notifications
-- **Next Themes** - Dark mode
-- **React Icons** - Icon library
-- **Axios** - HTTP client
+### 🔑 Demo Admin Credentials
 
-### Backend
-- **Node.js** - Runtime
-- **Express.js** - Web framework
-- **MongoDB + Mongoose** - Database
-- **JWT** - Authentication
-- **Stripe** - Payment processing
-- **imgBB API** - Image hosting
-- **Bcrypt** - Password hashing
-- **CORS** - Cross-origin support
-- **Helmet** - Security headers
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@arthub.com` | `Admin@123` |
 
-## Getting Started
+---
 
-### Prerequisites
-- Node.js 18+ installed
-- MongoDB Atlas account
-- Stripe account (for payments)
-- imgBB account (for image uploads)
+## 📑 Table of Contents
 
-### Installation
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Environment Variables](#-environment-variables)
+- [Getting Started](#-getting-started)
+- [API Routes](#-api-routes)
+- [Links](#-links)
 
-1. **Clone the repositories**
-```bash
-# Server
-git clone [your-server-repo-url]
-cd arthub-server
+---
 
-# Client
-git clone [your-client-repo-url]
-cd arthub-client
-```
+## ✨ Key Features
 
-2. **Install dependencies**
-```bash
-# Server
-npm install
+### 🔐 Authentication & Security
+- JWT authentication (email/password + Google OAuth), 7-day token expiry
+- Role-based access control middleware (`user`, `artist`, `admin`)
+- Password hashing with bcrypt
+- Helmet, CORS, and rate limiting (global + auth-specific) for hardened security
 
-# Client
-npm install
-```
+### 🖼️ Artwork Management
+- Full CRUD on artworks, scoped to the owning artist
+- Server-side search, category & price filtering, sorting, and pagination
+- Featured artworks and top-artists aggregation endpoints
 
-3. **Set up environment variables**
+### 💳 Payments (Stripe)
+- Checkout sessions for one-time artwork purchases and recurring subscriptions
+- Verified Stripe webhook (`checkout.session.completed`) with raw-body signature validation
+- Subscription tier enforcement (Free: 3, Pro: 9, Premium: unlimited purchases)
+- Automatic artwork "sold" status and purchase-count tracking on successful payment
 
-**Server (.env)**
-```env
-PORT=5000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
-STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-CLIENT_URL=http://localhost:3000
-NODE_ENV=development
-```
+### 💬 Engagement
+- Purchase-gated comment system — only buyers can comment, with edit/delete for owners
+- Wishlist endpoints — add, remove, and list saved artworks per user
+- Dummy email notification service — simulated purchase/subscription confirmation emails logged to the console
 
-**Client (.env.local)**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
-NEXT_PUBLIC_IMGBB_API_KEY=your_imgbb_api_key
-```
+### 📊 Admin & Analytics
+- User management with role updates
+- Platform-wide transaction history
+- Aggregated analytics: total users, artists, artworks sold, revenue, monthly sales, sales by category
 
-4. **Seed admin user**
-```bash
-# In server directory
-node seed.js
-```
+---
 
-5. **Run the application**
-```bash
-# Server (terminal 1)
-npm run dev
+## 🛠️ Tech Stack
 
-# Client (terminal 2)
-npm run dev
-```
+| Category | Technology |
+|---|---|
+| Runtime | [Node.js](https://nodejs.org/) |
+| Framework | [Express 5](https://expressjs.com/) |
+| Database | [MongoDB](https://www.mongodb.com/) + [Mongoose](https://mongoosejs.com/) |
+| Auth | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken), [bcryptjs](https://www.npmjs.com/package/bcryptjs) |
+| Payments | [Stripe](https://stripe.com/) |
+| Security | [helmet](https://www.npmjs.com/package/helmet), [cors](https://www.npmjs.com/package/cors), [express-rate-limit](https://www.npmjs.com/package/express-rate-limit), [cookie-parser](https://www.npmjs.com/package/cookie-parser) |
+| Email (dummy) | [nodemailer](https://www.npmjs.com/package/nodemailer) (console-simulated) |
+| Dev Tooling | [nodemon](https://www.npmjs.com/package/nodemon) |
+| Deployment | [Vercel](https://vercel.com/) (serverless functions) |
 
-6. **Open browser**
-- Client: http://localhost:3000
-- Server: http://localhost:5000
+---
 
-## Default Admin Credentials
-- **Email**: admin@arthub.com
-- **Password**: Admin@123
-
-## Deployment
-
-### Server (Backend)
-1. Push to GitHub
-2. Deploy to Render, Railway, or Vercel (serverless)
-3. Set environment variables in deployment platform
-4. Update `CLIENT_URL` to your live frontend URL
-
-### Client (Frontend)
-1. Push to GitHub
-2. Deploy to Vercel
-3. Set environment variables:
-   - `NEXT_PUBLIC_API_URL` = your live backend URL
-   - `NEXT_PUBLIC_IMGBB_API_KEY` = your imgBB API key
-4. Deploy
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `POST /api/auth/google` - Google OAuth
-- `GET /api/auth/me` - Get current user
-
-### Artworks
-- `GET /api/artworks` - Get all artworks (with filters)
-- `GET /api/artworks/:id` - Get single artwork
-- `POST /api/artworks` - Create artwork (artist)
-- `PUT /api/artworks/:id` - Update artwork (artist)
-- `DELETE /api/artworks/:id` - Delete artwork
-
-### Transactions
-- `POST /api/transactions/create-purchase-session` - Purchase artwork
-- `POST /api/transactions/create-subscription-session` - Subscribe
-- `GET /api/transactions/user/purchases` - User purchase history
-- `GET /api/transactions/artist/sales` - Artist sales history
-- `GET /api/transactions/analytics` - Admin analytics
-
-### Comments
-- `GET /api/comments/artwork/:id` - Get comments
-- `POST /api/comments/artwork/:id` - Add comment
-- `PUT /api/comments/:id` - Update comment
-- `DELETE /api/comments/:id` - Delete comment
-
-### Users (Admin)
-- `GET /api/users` - Get all users
-- `PUT /api/users/:id/role` - Update user role
-
-## Subscription Tiers
-
-| Tier | Max Purchases | Price |
-|------|--------------|-------|
-| Free | 3 paintings | $0 |
-| Pro | 9 paintings | $9.99/month |
-| Premium | Unlimited | $19.99/month |
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 arthub-server/
+├── api/
+│   └── index.js              # Vercel serverless entry point
 ├── src/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
+│   ├── config/                # Database connection
+│   ├── middleware/            # Auth, role authorization, rate limiting, error handling
+│   ├── models/                # User, Artwork, Transaction, Comment (Mongoose schemas)
 │   ├── routes/
+│   │   ├── auth.js            # Register, login, Google login, profile, password
+│   │   ├── artworks.js        # CRUD, search/filter, featured, top-artists, by-artist
+│   │   ├── transactions.js    # Stripe checkout, webhook, history, analytics
+│   │   ├── comments.js        # Purchase-gated comment CRUD
+│   │   ├── users.js           # Admin user/role management
+│   │   └── wishlist.js        # Wishlist CRUD
 │   └── utils/
-├── index.js
-├── seed.js
-└── package.json
-
-arthub-client/
-├── app/
-│   ├── artworks/
-│   ├── dashboard/
-│   ├── login/
-│   ├── register/
-│   └── page.js
-├── components/
-├── context/
-├── lib/
-└── package.json
+│       └── emailService.js    # Dummy email notification logger
+├── index.js                   # Local dev entry point
+└── vercel.json                # Vercel build/route config
 ```
 
-## Key Features Implemented
+---
 
-✅ Role-based authentication (User, Artist, Admin)  
-✅ JWT token-based auth with 7-day expiry  
-✅ Google OAuth integration  
-✅ Stripe payment integration  
-✅ Image upload via imgBB  
-✅ Advanced search and filtering  
-✅ Pagination  
-✅ Comment system (purchase required)  
-✅ Subscription tiers  
-✅ Wishlist functionality  
-✅ Dark mode  
-✅ Responsive design  
-✅ Loading states and skeleton loaders  
-✅ Error handling  
-✅ Animations with Framer Motion  
+## 🔧 Environment Variables
 
-## License
-MIT License
+Create a `.env` file in the root:
 
-## Credits
-Developed for Programming Hero Course
+```env
+PORT=5000
+MONGODB_URI=
+JWT_SECRET=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+CLIENT_URL=
+NODE_ENV=production
+```
+
+---
+
+## 🚀 Getting Started
+
+```bash
+# Clone the repo
+git clone https://github.com/Farhadmu/Arthub-server.git
+cd Arthub-server
+
+# Install dependencies
+npm install
+
+# Run the development server
+npm run dev
+```
+
+The API runs on `http://localhost:5000` by default. All routes are prefixed with `/api`.
+
+---
+
+## 🔌 API Routes
+
+| Route Prefix | Description |
+|---|---|
+| `POST /api/auth/register` | Register a new user (User or Artist role) |
+| `POST /api/auth/login` | Email/password login |
+| `POST /api/auth/google` | Google OAuth login |
+| `PUT /api/auth/profile` | Update profile (name, avatar) |
+| `PUT /api/auth/change-password` | Change password |
+| `GET /api/artworks` | Browse with search/filter/sort/pagination |
+| `GET /api/artworks/:id` | Get a single artwork |
+| `POST /api/artworks` | Create artwork *(artist only)* |
+| `PUT /api/artworks/:id` | Update own artwork *(artist only)* |
+| `DELETE /api/artworks/:id` | Delete artwork *(artist/admin)* |
+| `GET /api/artworks/artist/:artistId` | Public artworks by a specific artist |
+| `POST /api/transactions/create-purchase-session` | Start Stripe checkout for a purchase |
+| `POST /api/transactions/create-subscription-session` | Start Stripe checkout for a subscription |
+| `POST /api/transactions/webhook` | Stripe webhook (signature-verified) |
+| `GET /api/transactions/user/purchases` | User's purchase history |
+| `GET /api/transactions/artist/sales` | Artist's sales history |
+| `GET /api/transactions/all` | All transactions *(admin only)* |
+| `GET /api/transactions/analytics` | Platform analytics *(admin only)* |
+| `GET /api/comments/artwork/:id` | Get comments for an artwork |
+| `POST /api/comments/artwork/:id` | Add a comment *(purchasers only)* |
+| `PUT /api/comments/:id` | Edit own comment |
+| `DELETE /api/comments/:id` | Delete own comment |
+| `GET /api/users` | List all users *(admin only)* |
+| `PUT /api/users/:id/role` | Change a user's role *(admin only)* |
+| `GET /api/wishlist` | Get current user's wishlist |
+| `POST /api/wishlist/:artworkId` | Add artwork to wishlist |
+| `DELETE /api/wishlist/:artworkId` | Remove artwork from wishlist |
+
+---
+
+## 🔗 Links
+
+- **Live API:** [arthub-server-two.vercel.app](https://arthub-server-two.vercel.app)
+- **Live Site:** [arthub-client-olive.vercel.app](https://arthub-client-olive.vercel.app)
+- **Frontend Repo:** [github.com/Farhadmu/Arthub-client](https://github.com/Farhadmu/Arthub-client)
+- **Backend Repo:** [github.com/Farhadmu/Arthub-server](https://github.com/Farhadmu/Arthub-server)
+
+---
+
+<div align="center">
+
+Built with ❤️ for art lovers and creators everywhere.
+
+</div>
