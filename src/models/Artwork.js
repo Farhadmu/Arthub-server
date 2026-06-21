@@ -20,3 +20,4 @@ artworkSchema.index({ price: 1 });
 artworkSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Artwork', artworkSchema);
+
