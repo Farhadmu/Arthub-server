@@ -5,6 +5,7 @@ const Transaction = require('../models/Transaction');
 const Artwork = require('../models/Artwork');
 const User = require('../models/User');
 const { auth, authorize } = require('../middleware/auth');
+const { sendPurchaseEmail, sendSubscriptionEmail } = require('../utils/emailService');
 
 // Create checkout session for artwork purchase
 router.post('/create-purchase-session', auth, async (req, res) => {
@@ -135,6 +136,16 @@ router.post('/webhook', async (req, res) => {
         amount: session.amount_total / 100,
         stripeSessionId: session.id
       });
+
+      // Dummy email notification (console log)
+      sendPurchaseEmail({
+        buyerEmail: buyer?.email,
+        buyerName: buyer?.name,
+        artistEmail: artist?.email,
+        artistName: artist?.name,
+        artworkTitle: artwork?.title,
+        amount: session.amount_total / 100,
+      });
     } else if (type === 'subscription') {
       const user = await User.findById(userId);
       if (user) {
@@ -150,6 +161,14 @@ router.post('/webhook', async (req, res) => {
         amount: session.amount_total / 100,
         subscriptionTier: tier,
         stripeSessionId: session.id
+      });
+
+      // Dummy email notification (console log)
+      sendSubscriptionEmail({
+        userEmail: user?.email,
+        userName: user?.name,
+        tier,
+        amount: session.amount_total / 100,
       });
     }
   }
