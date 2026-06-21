@@ -19,11 +19,6 @@
 
 This is the backend REST API for **ArtHub**, an online art marketplace connecting artists and art buyers. Built with Node.js, Express, and MongoDB, it handles authentication, role-based access control, artwork management, Stripe payments, comments, wishlists, and admin analytics for the [ArtHub frontend](https://github.com/Farhadmu/Arthub-client).
 
-### 🔑 Demo Admin Credentials
-
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@arthub.com` | `Admin@123` |
 
 ---
 
