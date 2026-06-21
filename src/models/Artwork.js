@@ -21,3 +21,4 @@ artworkSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Artwork', artworkSchema);
 
+
