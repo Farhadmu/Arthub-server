@@ -138,4 +138,21 @@ router.get('/smart-search', async (req, res) => {
   }
 });
 
+// 7. AI Audio Museum Guide Narration
+router.get('/audio-guide/:artworkId', async (req, res) => {
+  try {
+    const artwork = await Artwork.findById(req.params.artworkId);
+    if (!artwork) {
+      return res.status(404).json({ message: 'Artwork not found' });
+    }
+
+    const { generateCuratorNarrative } = require('../services/audioGuideService');
+    const narrative = generateCuratorNarrative(artwork);
+
+    res.json(narrative);
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Audio narrative generation failed' });
+  }
+});
+
 module.exports = router;
