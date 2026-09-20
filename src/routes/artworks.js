@@ -90,6 +90,7 @@ router.post('/:id/view', async (req, res) => {
 // Get featured artworks
 router.get('/featured', async (req, res) => {
   try {
+    res.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     const artworks = await Artwork.find({ isPublished: true, isSold: false })
       .sort({ featured: -1, views: -1, createdAt: -1 })
       .limit(8)
@@ -103,6 +104,7 @@ router.get('/featured', async (req, res) => {
 // Get curated Spotlight Masterpiece of the Week for home page
 router.get('/spotlight', async (req, res) => {
   try {
+    res.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
     let spotlight = await Artwork.findOne({ isPublished: true, featured: true })
       .sort({ views: -1, createdAt: -1 })
       .populate('artist', 'name avatar email bio');
@@ -133,6 +135,7 @@ router.get('/spotlight', async (req, res) => {
 // Get category metrics and live counts for home exploration
 router.get('/categories/metrics', async (req, res) => {
   try {
+    res.set('Cache-Control', 'public, s-maxage=180, stale-while-revalidate=360');
     const metrics = await Artwork.aggregate([
       { $match: { isPublished: true } },
       {

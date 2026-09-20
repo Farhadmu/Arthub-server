@@ -28,6 +28,7 @@ router.get('/', async (req, res) => {
 // Get spotlight auction for Home Page banner / live arena widget
 router.get('/spotlight', async (req, res) => {
   try {
+    res.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
     let auction = await Auction.findOne({ status: 'ACTIVE' })
       .populate('artwork', 'title image price category style colorPalette description')
       .populate('artist', 'name avatar')
