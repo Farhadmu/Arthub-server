@@ -180,6 +180,8 @@ The API runs on `http://localhost:5000` by default. All routes are prefixed with
 | `POST /api/auctions` | Create live auction *(auth required)* |
 | `POST /api/auctions/:id/bid` | Place bid with anti-sniping extension *(auth required)* |
 | `POST /api/auctions/:id/settle` | Settle auction and finalize winning collector *(auth required)* |
+| `GET /api/ai/audio-guide/:artworkId` | AI Museum Audio Guide narration & script generation |
+| `GET /api/ai/palette-search` | Interior design color palette distance search (hex/RGB) |
 
 ---
 
