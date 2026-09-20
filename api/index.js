@@ -14,6 +14,8 @@ const wishlistRoutes = require('../src/routes/wishlist');
 const aiRoutes = require('../src/routes/ai');
 const notificationRoutes = require('../src/routes/notifications');
 const uploadRoutes = require('../src/routes/upload');
+const certificateRoutes = require('../src/routes/certificates');
+const auctionRoutes = require('../src/routes/auctions');
 
 const app = express();
 
@@ -121,6 +123,8 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/certificates', certificateRoutes);
+app.use('/api/auctions', auctionRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
