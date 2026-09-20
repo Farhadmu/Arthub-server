@@ -104,6 +104,8 @@ const auctionSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 auctionSchema.index({ status: 1, endTime: 1 });
+auctionSchema.index({ status: 1, currentBid: -1 });
+auctionSchema.index({ highestBidder: 1 });
 auctionSchema.index({ artwork: 1 });
 auctionSchema.index({ artist: 1 });
 
