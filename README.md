@@ -176,10 +176,13 @@ The API runs on `http://localhost:5000` by default. All routes are prefixed with
 | `GET /api/certificates/artwork/:id` | Artwork certificate details |
 | `POST /api/certificates/issue` | Mint Certificate of Authenticity *(auth required)* |
 | `GET /api/auctions` | Browse live auctions *(filters: ACTIVE, UPCOMING, ENDED)* |
+| `GET /api/auctions/spotlight` | Curated live auction spotlight for home arena ticker |
 | `GET /api/auctions/:id` | Get single live auction details and bid history |
 | `POST /api/auctions` | Create live auction *(auth required)* |
 | `POST /api/auctions/:id/bid` | Place bid with anti-sniping extension *(auth required)* |
 | `POST /api/auctions/:id/settle` | Settle auction and finalize winning collector *(auth required)* |
+| `GET /api/artworks/spotlight` | Curated Masterwork of the Week with curatorial notes |
+| `GET /api/artworks/categories/metrics` | Live category distribution, average valuation, and sample thumbnails |
 | `GET /api/ai/audio-guide/:artworkId` | AI Museum Audio Guide narration & script generation |
 | `GET /api/ai/palette-search` | Interior design color palette distance search (hex/RGB) |
 
