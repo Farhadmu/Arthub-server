@@ -130,6 +130,37 @@ router.get('/spotlight', async (req, res) => {
   }
 });
 
+// Get category metrics and live counts for home exploration
+router.get('/categories/metrics', async (req, res) => {
+  try {
+    const metrics = await Artwork.aggregate([
+      { $match: { isPublished: true } },
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          sampleImage: { $first: '$image' },
+          styles: { $addToSet: '$style' }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json(metrics.map(m => ({
+      name: m._id,
+      count: m.count,
+      avgPrice: Math.round(m.avgPrice || 0),
+      minPrice: m.minPrice || 0,
+      image: m.sampleImage,
+      styles: (m.styles || []).slice(0, 3)
+    })));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get top artists (by sales; falls back to view-count or newest artists)
 router.get('/top-artists', async (req, res) => {
   try {
