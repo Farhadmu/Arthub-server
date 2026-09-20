@@ -165,4 +165,38 @@ router.post('/:id/bid', auth, async (req, res) => {
   }
 });
 
+// Settle auction (Finalize winner and mark artwork as sold)
+router.post('/:id/settle', auth, async (req, res) => {
+  try {
+    const auction = await Auction.findById(req.params.id);
+    if (!auction) {
+      return res.status(404).json({ message: 'Auction not found' });
+    }
+
+    if (auction.status === 'SETTLED') {
+      return res.status(400).json({ message: 'Auction already settled' });
+    }
+
+    auction.status = 'SETTLED';
+    await auction.save();
+
+    // Mark artwork as sold
+    if (auction.highestBidder) {
+      await Artwork.findByIdAndUpdate(auction.artwork, {
+        isSold: true,
+        buyer: auction.highestBidder,
+      });
+    }
+
+    res.json({
+      message: 'Auction successfully finalized and settled',
+      winner: auction.highestBidderName,
+      winningBid: auction.currentBid,
+      auction,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Auction settlement failed' });
+  }
+});
+
 module.exports = router;
