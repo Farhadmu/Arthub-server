@@ -93,15 +93,20 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+const { bidLimiter } = require('../middleware/rateLimiter');
+
 // Place a bid
-router.post('/:id/bid', auth, async (req, res) => {
+router.post('/:id/bid', auth, bidLimiter, async (req, res) => {
   try {
     const { amount } = req.body;
-    const bidAmount = Number(amount);
+    const parsed = Number(amount);
 
-    if (!bidAmount || isNaN(bidAmount) || bidAmount <= 0) {
-      return res.status(400).json({ message: 'A valid positive bid amount is required' });
+    if (!parsed || isNaN(parsed) || !isFinite(parsed) || parsed <= 0 || parsed > 10000000) {
+      return res.status(400).json({ message: 'A valid positive bid amount between $1 and $10,000,000 is required' });
     }
+
+    // Round to 2 decimal places to prevent float precision exploit
+    const bidAmount = Math.round(parsed * 100) / 100;
 
     const auction = await Auction.findById(req.params.id);
     if (!auction) {
