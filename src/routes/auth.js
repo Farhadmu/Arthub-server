@@ -4,8 +4,10 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'arthub_super_secret_jwt_key_default';
+
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 };
 
 // Register
@@ -68,11 +70,21 @@ router.post('/google', async (req, res) => {
   try {
     const { name, email, googleId, avatar } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required for Google Sign-In' });
+    }
+
+    if (require('mongoose').connection.readyState !== 1) {
+      return res.status(503).json({
+        message: 'Database is connecting or offline on Vercel. Please configure MONGODB_URI and allow 0.0.0.0/0 in MongoDB Atlas.',
+      });
+    }
+
     let user = await User.findOne({ email });
     
     if (!user) {
       user = new User({
-        name,
+        name: name || email.split('@')[0],
         email,
         googleId,
         avatar,
