@@ -155,4 +155,72 @@ router.get('/audio-guide/:artworkId', async (req, res) => {
   }
 });
 
+// Helper: Hex to RGB
+function hexToRgb(hex) {
+  const clean = hex.replace('#', '');
+  if (clean.length === 3) {
+    return [
+      parseInt(clean[0] + clean[0], 16),
+      parseInt(clean[1] + clean[1], 16),
+      parseInt(clean[2] + clean[2], 16),
+    ];
+  }
+  if (clean.length === 6) {
+    return [
+      parseInt(clean.substring(0, 2), 16),
+      parseInt(clean.substring(2, 4), 16),
+      parseInt(clean.substring(4, 6), 16),
+    ];
+  }
+  return [128, 128, 128];
+}
+
+// 8. Color Palette Search (Interior Design Color Matcher)
+router.get('/palette-search', async (req, res) => {
+  try {
+    const { hex = '#1A2238', tolerance = 120, limit = 12 } = req.query;
+    const targetRgb = hexToRgb(hex);
+
+    const artworks = await Artwork.find({
+      isPublished: true,
+      colorPalette: { $exists: true, $not: { $size: 0 } },
+    }).populate('artist', 'name avatar');
+
+    // Rank by color distance to target color
+    const scored = artworks.map((art) => {
+      let minDistance = 999999;
+      (art.colorPalette || []).forEach((swatch) => {
+        const swatchRgb = hexToRgb(swatch);
+        const distance = Math.sqrt(
+          Math.pow(targetRgb[0] - swatchRgb[0], 2) +
+          Math.pow(targetRgb[1] - swatchRgb[1], 2) +
+          Math.pow(targetRgb[2] - swatchRgb[2], 2)
+        );
+        if (distance < minDistance) minDistance = distance;
+      });
+
+      return {
+        artwork: art,
+        colorDistance: Math.round(minDistance),
+        matchPercentage: Math.max(10, Math.min(100, Math.round(100 - (minDistance / 441) * 100))),
+      };
+    });
+
+    // Filter and sort by closest match
+    scored.sort((a, b) => a.colorDistance - b.colorDistance);
+    const results = scored.slice(0, Number(limit));
+
+    res.json({
+      targetHex: hex,
+      totalMatches: results.length,
+      artworks: results.map((r) => ({
+        ...r.artwork.toObject(),
+        matchPercentage: r.matchPercentage,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Palette search failed' });
+  }
+});
+
 module.exports = router;
