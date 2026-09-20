@@ -171,6 +171,10 @@ The API runs on `http://localhost:5000` by default. All routes are prefixed with
 | `GET /api/wishlist` | Get current user's wishlist |
 | `POST /api/wishlist/:artworkId` | Add artwork to wishlist |
 | `DELETE /api/wishlist/:artworkId` | Remove artwork from wishlist |
+| `GET /api/certificates/verify/:hash` | Public provenance & Certificate of Authenticity lookup |
+| `GET /api/certificates/my-certificates` | Acquired user certificates *(auth required)* |
+| `GET /api/certificates/artwork/:id` | Artwork certificate details |
+| `POST /api/certificates/issue` | Mint Certificate of Authenticity *(auth required)* |
 
 ---
 
