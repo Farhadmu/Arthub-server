@@ -18,12 +18,14 @@ const uploadRoutes = require('../src/routes/upload');
 const app = express();
 
 let cachedPromise = null;
+let lastDbError = null;
 
 async function connectDB() {
   if (mongoose.connection.readyState === 1) {
     return mongoose.connection;
   }
   if (!process.env.MONGODB_URI) {
+    lastDbError = 'MONGODB_URI is not set';
     console.warn('MONGODB_URI is not set in environment variables');
     return null;
   }
@@ -31,10 +33,12 @@ async function connectDB() {
     cachedPromise = mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
     }).then((conn) => {
+      lastDbError = null;
       console.log(`MongoDB Connected: ${conn.connection.host}`);
       return conn;
     }).catch((err) => {
       console.error(`Database connection error: ${err.message}`);
+      lastDbError = err.message;
       cachedPromise = null;
       return null;
     });
@@ -88,9 +92,10 @@ app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     message: 'ArtHub API is running on Vercel',
-    version: '2.0.2',
+    version: '2.0.3',
     hasMongoUri: Boolean(process.env.MONGODB_URI),
     dbState: mongoose.connection.readyState === 1 ? 'connected' : (mongoose.connection.readyState === 2 ? 'connecting' : 'disconnected'),
+    lastDbError: lastDbError,
     timestamp: new Date().toISOString(),
   });
 });
@@ -99,9 +104,10 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'ArtHub AI API is running on Vercel',
-    version: '2.0.2',
+    version: '2.0.3',
     hasMongoUri: Boolean(process.env.MONGODB_URI),
     dbState: mongoose.connection.readyState === 1 ? 'connected' : (mongoose.connection.readyState === 2 ? 'connecting' : 'disconnected'),
+    lastDbError: lastDbError,
     aiServices: ['artworkGenerator', 'recommendations', 'visualSearch', 'curatorAssistant', 'moderation', 'artistInsights'],
   });
 });
