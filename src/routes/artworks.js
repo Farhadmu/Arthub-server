@@ -5,28 +5,39 @@ const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const { auth, authorize } = require('../middleware/auth');
 
+// Utility to escape regex characters to prevent ReDoS attacks
+function escapeRegex(text) {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
 // Get all artworks (public — search, filter, sort, pagination)
 router.get('/', async (req, res) => {
   try {
     const {
-      search, category, minPrice, maxPrice,
+      search, category, style, mood, tag, minPrice, maxPrice,
       sort = 'newest', page = 1, limit = 12,
     } = req.query;
 
     const query = { isPublished: true };
 
-    if (search) {
+    if (search && search.trim()) {
+      const sanitized = escapeRegex(search.trim());
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { artistName: { $regex: search, $options: 'i' } },
+        { title: { $regex: sanitized, $options: 'i' } },
+        { artistName: { $regex: sanitized, $options: 'i' } },
+        { tags: { $regex: sanitized, $options: 'i' } },
+        { style: { $regex: sanitized, $options: 'i' } },
       ];
     }
 
     if (category && category !== 'All') query.category = category;
+    if (style && style !== 'All') query.style = style;
+    if (mood && mood !== 'All') query.mood = mood;
+    if (tag) query.tags = tag.toLowerCase();
 
     if (minPrice || maxPrice) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
+      if (minPrice) query.price.$gte = Math.max(0, Number(minPrice));
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
@@ -34,24 +45,43 @@ router.get('/', async (req, res) => {
     if (sort === 'price-low') sortOption = { price: 1 };
     else if (sort === 'price-high') sortOption = { price: -1 };
     else if (sort === 'oldest') sortOption = { createdAt: 1 };
+    else if (sort === 'popular') sortOption = { views: -1, createdAt: -1 };
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const parsedPage = Math.max(1, parseInt(page) || 1);
+    const parsedLimit = Math.min(50, Math.max(1, parseInt(limit) || 12));
+    const skip = (parsedPage - 1) * parsedLimit;
+
     const total = await Artwork.countDocuments(query);
     const artworks = await Artwork.find(query)
       .sort(sortOption)
       .skip(skip)
-      .limit(Number(limit))
+      .limit(parsedLimit)
       .populate('artist', 'name avatar email');
 
     res.json({
       artworks,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
-        pages: Math.ceil(total / Number(limit)),
+        pages: Math.ceil(total / parsedLimit) || 1,
       },
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Increment artwork view count (public)
+router.post('/:id/view', async (req, res) => {
+  try {
+    const artwork = await Artwork.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
+    if (!artwork) return res.status(404).json({ message: 'Artwork not found' });
+    res.json({ views: artwork.views });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -61,8 +91,8 @@ router.get('/', async (req, res) => {
 router.get('/featured', async (req, res) => {
   try {
     const artworks = await Artwork.find({ isPublished: true, isSold: false })
-      .sort({ createdAt: -1 })
-      .limit(6)
+      .sort({ featured: -1, views: -1, createdAt: -1 })
+      .limit(8)
       .populate('artist', 'name avatar');
     res.json(artworks);
   } catch (error) {
@@ -70,14 +100,14 @@ router.get('/featured', async (req, res) => {
   }
 });
 
-// Get top artists (by sales; falls back to newest artists if no sales yet)
+// Get top artists (by sales; falls back to view-count or newest artists)
 router.get('/top-artists', async (req, res) => {
   try {
     const byTransaction = await Transaction.aggregate([
       { $match: { type: 'purchase' } },
       { $group: { _id: '$artist', count: { $sum: 1 }, totalSales: { $sum: '$amount' } } },
       { $sort: { totalSales: -1 } },
-      { $limit: 3 },
+      { $limit: 4 },
       { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'artistInfo' } },
       { $unwind: '$artistInfo' },
       {
@@ -96,10 +126,10 @@ router.get('/top-artists', async (req, res) => {
       return res.json(byTransaction);
     }
 
-    // Fallback: show newest artists even if no sales yet
+    // Fallback: show active artists
     const fallback = await User.find({ role: 'artist' })
       .sort({ createdAt: -1 })
-      .limit(3)
+      .limit(4)
       .select('name avatar email');
 
     res.json(fallback.map(a => ({
@@ -169,12 +199,32 @@ router.get('/:id', async (req, res) => {
 // Create artwork (artist only)
 router.post('/', auth, authorize('artist'), async (req, res) => {
   try {
-    const { title, description, price, category, image } = req.body;
+    const {
+      title, description, price, category, subcategory, image,
+      tags, style, mood, colorPalette, altText, aiGenerated,
+    } = req.body;
+
+    if (!title || !description || price === undefined || !image || !category) {
+      return res.status(400).json({ message: 'Title, description, price, category, and image are required.' });
+    }
+
     const artwork = new Artwork({
-      title, description, price, category, image,
+      title: title.trim(),
+      description: description.trim(),
+      price: Number(price),
+      category,
+      subcategory: subcategory || '',
+      image,
       artist: req.user._id,
       artistName: req.user.name,
+      tags: Array.isArray(tags) ? tags.map(t => t.toLowerCase().trim()) : [],
+      style: style || 'Contemporary',
+      mood: mood || 'Inspiring',
+      colorPalette: Array.isArray(colorPalette) ? colorPalette : [],
+      altText: altText || '',
+      aiGenerated: aiGenerated || { isAiAssisted: false },
     });
+
     await artwork.save();
     await artwork.populate('artist', 'name avatar email');
     res.status(201).json(artwork);
@@ -193,12 +243,23 @@ router.put('/:id', auth, authorize('artist'), async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to edit this artwork' });
     }
 
-    const { title, description, price, category, image } = req.body;
-    if (title) artwork.title = title;
-    if (description) artwork.description = description;
-    if (price !== undefined) artwork.price = price;
+    const {
+      title, description, price, category, subcategory, image,
+      tags, style, mood, colorPalette, altText, isPublished,
+    } = req.body;
+
+    if (title) artwork.title = title.trim();
+    if (description) artwork.description = description.trim();
+    if (price !== undefined) artwork.price = Number(price);
     if (category) artwork.category = category;
+    if (subcategory !== undefined) artwork.subcategory = subcategory;
     if (image) artwork.image = image;
+    if (tags !== undefined) artwork.tags = Array.isArray(tags) ? tags.map(t => t.toLowerCase().trim()) : [];
+    if (style) artwork.style = style;
+    if (mood) artwork.mood = mood;
+    if (colorPalette) artwork.colorPalette = colorPalette;
+    if (altText !== undefined) artwork.altText = altText;
+    if (isPublished !== undefined) artwork.isPublished = Boolean(isPublished);
 
     await artwork.save();
     await artwork.populate('artist', 'name avatar email');
