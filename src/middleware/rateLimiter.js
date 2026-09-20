@@ -24,4 +24,12 @@ const uploadLimiter = rateLimit({
   message: { message: 'Upload limit reached, please try again in an hour.' },
 });
 
-module.exports = { globalLimiter, authLimiter, uploadLimiter };
+const bidLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 15, // max 15 bids per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Bidding rate limit exceeded. Please wait a moment before submitting another bid.' },
+});
+
+module.exports = { globalLimiter, authLimiter, uploadLimiter, bidLimiter };
