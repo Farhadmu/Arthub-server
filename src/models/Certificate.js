@@ -81,7 +81,8 @@ const certificateSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-certificateSchema.index({ verificationHash: 1 });
+certificateSchema.index({ verificationHash: 1 }, { unique: true });
+certificateSchema.index({ buyer: 1, createdAt: -1 });
 certificateSchema.index({ artwork: 1, buyer: 1 });
 certificateSchema.index({ artist: 1 });
 
