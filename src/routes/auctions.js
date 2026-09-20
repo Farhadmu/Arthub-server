@@ -25,6 +25,33 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get spotlight auction for Home Page banner / live arena widget
+router.get('/spotlight', async (req, res) => {
+  try {
+    let auction = await Auction.findOne({ status: 'ACTIVE' })
+      .populate('artwork', 'title image price category style colorPalette description')
+      .populate('artist', 'name avatar')
+      .populate('highestBidder', 'name avatar')
+      .sort({ currentBid: -1, endTime: 1 });
+
+    if (!auction) {
+      auction = await Auction.findOne()
+        .populate('artwork', 'title image price category style colorPalette description')
+        .populate('artist', 'name avatar')
+        .populate('highestBidder', 'name avatar')
+        .sort({ createdAt: -1 });
+    }
+
+    if (!auction) {
+      return res.status(404).json({ message: 'No active spotlight auction available' });
+    }
+
+    res.json(auction);
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to fetch spotlight auction' });
+  }
+});
+
 // Get single auction by ID
 router.get('/:id', async (req, res) => {
   try {
