@@ -175,6 +175,11 @@ The API runs on `http://localhost:5000` by default. All routes are prefixed with
 | `GET /api/certificates/my-certificates` | Acquired user certificates *(auth required)* |
 | `GET /api/certificates/artwork/:id` | Artwork certificate details |
 | `POST /api/certificates/issue` | Mint Certificate of Authenticity *(auth required)* |
+| `GET /api/auctions` | Browse live auctions *(filters: ACTIVE, UPCOMING, ENDED)* |
+| `GET /api/auctions/:id` | Get single live auction details and bid history |
+| `POST /api/auctions` | Create live auction *(auth required)* |
+| `POST /api/auctions/:id/bid` | Place bid with anti-sniping extension *(auth required)* |
+| `POST /api/auctions/:id/settle` | Settle auction and finalize winning collector *(auth required)* |
 
 ---
 
